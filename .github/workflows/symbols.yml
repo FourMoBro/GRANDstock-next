@@ -1,4 +1,4 @@
-ame: Lobsters Data Import
+name: GRANDstock Stock Data Import
 
 on:
   push:
