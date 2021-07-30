@@ -1,0 +1,36 @@
+ame: Lobsters Data Import
+
+on:
+  push:
+    paths:
+      - .github/workflows/symbols.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '1 2 1 * *'
+    
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - name: Fetch all symbols 
+        uses: githubocto/flat@v2
+        with:   
+          http_url: https://finnhub.io/api/v1/stock/symbol?exchange=US&token=c068g7f48v6v0bd9mbl0
+          downloaded_filename: symbols.json
+      - name: Neo4j import symbols as nodes
+        uses: johnymontana/flat-graph@v1.2
+        with:
+          neo4j-user: ${{secrets.AURA_USER}}
+          neo4j-password: ${{secrets.AURA_PASSWORD}}
+          neo4j-uri: ${{secrets.AURA_URI}}
+          filename: symbols.json
+          cypher-query: >
+            UNWIND $value AS symbol
+            MERGE (s:Symbol {id: symbol.displaySymbol})
+              SET s.description = symbol.description,
+                  s.figi   = symbol.figi,
+                  s.mic = symbol.mic,
+                  s.symbol = symbol.symbol
+            
